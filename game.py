@@ -49,8 +49,13 @@ class CardGame:
 def table_play(game,dealer,players):
     i = 0
     while player:
+
+        print('--------------------')
         print(f'Starting a new turn:')
+        print('')
         turn(game,dealer,players)
+    print('-----------')
+    print('No player left!')
 
 
 def turn(game,dealer,players):
@@ -90,24 +95,28 @@ def turn(game,dealer,players):
     # Here, the dealer does not have a blackjack
     # And the remaining player neither
     for player in players:
+        print('')
         print(f'Player {player.player_id} turn:')
+        
         time.sleep(0.8)
         player.get_moves(game)
 
     # The dealer turn
+    print('')
     print('The Dealer is playing:')
     time.sleep(0.8)
     dealer_cards = dealer.hands[0].get_printable_card()
     print(f'The dealer cards are [{dealer_cards[0]}] and [{dealer_cards[1]}]')
     print(f'The Dealer score is {dealer.hands[0].hand_score()}')
     dealer.make_move(game)
-
+    print('')
 
     if dealer.status =='blown_up':
         #every remaining hands won
         for player in players:
             for hand in player.hands:
                 player.won_hand()
+                player.hands.remove(hand)
                 hand.toss_hand(game)
 
 
@@ -125,11 +134,12 @@ def turn(game,dealer,players):
                     player.lost_hand()
                 else:
                     player.equal_hand()
-
+                player.hands.remove(hand)
                 hand.toss_hand(game)
             player.bet = 0
 
     #Print player pot
+    print('--------------------')
     pot_str = "The player pots are : "
     for player in players:
         pot_str +=f"{player.pot} for {player.player_id}, "
@@ -141,6 +151,7 @@ def turn(game,dealer,players):
             print(f'Player {player.player_id} is eliminated')
             players.remove(player)
     # End of turn
+    game.print_deck()
     return
 
 
@@ -151,5 +162,5 @@ if __name__=='__main__':
     game.print_deck()
 
     dealer = Dealer()
-    player = [HumanGambler(10000)]
+    player = [HumanGambler(10000),RandomComputerGambler(10000)]
     table_play(game,dealer,player)

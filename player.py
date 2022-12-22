@@ -25,7 +25,7 @@ class Hand:
             return True
 
     def get_printable_card(self):
-        card_str = [str(card[0])+card[1] for card in self.hand]
+        card_str = [self.card_value(card[0])+card[1] for card in self.hand]
         return card_str
 
     def print_hand(self):
@@ -49,12 +49,17 @@ class Hand:
 
         return self.score
 
+    @staticmethod
+    def card_value(card_number):
+        card_val = ['As','2','3','4','5','6','7','8','9','10','J','Q','K']
+        return card_val[card_number-1]
+
     def add_card(self,game):
         # draw a card and update hand score and status
         card = game.draw_card()
         self.print_hand()
         self.hand.append(card)
-        print(f'The card [{str(card[0])+card[1]}] is drawn.')
+        print(f'The card [{self.card_value(card[0])+card[1]}] is drawn.')
         self.print_hand()
         self.score = self.hand_score()
         print(f'The new hand score is {self.score}.')
@@ -70,7 +75,7 @@ class Hand:
         # return True if the player can split his card
         return len(self.hand)==2 and self.hand[0][0] == self.hand[1][0]
 
-    def split(self):
+    def split(self,game):
         return Hand(game,card = self.hand[0]),Hand(game,card = self.hand[1])
 
 class Player:
@@ -90,21 +95,26 @@ class Player:
         moves = []
         for hand in self.hands:
             if hand.score<21:
+                print(f'Your score is {hand.score}.')
                 move = self.get_move(game,hand)
 
 
     def won_hand(self):
         self.pot += 2*self.bet
+        print(f'Player {self.player_id} won {self.bet}')
 
     def lost_hand(self):
-        pass
+        print(f'Player {self.player_id} lost {self.bet}')
 
     def won_blackjack(self):
         self.pot += 2.5*self.bet
+        print(f'Player {self.player_id} won {1.5*self.bet}')
 
 
     def equal_hand(self):
         self.pot += self.bet
+        print(f'Player {self.player_id} won/lost nothing')
+
 
 
     def make_move(self,game,hand,move):
@@ -115,6 +125,7 @@ class Player:
 
             if hand.score>21:
                 self.lost_hand()
+                self.hands.remove(hand)
                 hand.toss_hand(game)
             elif hand.score==21:
                 #end of hand turn
@@ -122,7 +133,7 @@ class Player:
             else:
                 self.get_move(game,hand)
         elif move == 'SP':
-            hands = hand.split()
+            hands = hand.split(game)
             self.hands.remove(hand)
             self.hands.append(hands)
             self.get_move(game,hands[0])
@@ -142,6 +153,7 @@ class Dealer(Player):
     def draw_first_cards(self,game):
         super().draw_first_cards(game)
         hand = self.hands[0].get_printable_card()
+        print('')
         print(f'Dealer draw [{hand[0]}] and [?]')
 
 
@@ -153,6 +165,7 @@ class Dealer(Player):
             hand.add_card(game)
 
         self.update_final_status()
+        self.hands.remove(hand)
         hand.toss_hand(game)
 
     def update_final_status(self):
@@ -160,6 +173,9 @@ class Dealer(Player):
         self.score = self.hands[0].hand_score()
         if self.score>21:
             self.status= 'blown_up'
+            print('-----')
+            print('The Dealer blow up!')
+            print('-----')
         else:
             self.status = 'done'
 
@@ -228,5 +244,8 @@ class RandomComputerGambler(Player):
             valid_moves = ['S','D','SP']
         else:
             valid_moves = ['S','D']
+        dict_move = {'S':'Stop','D':'Draw','SP':'Split'}
         move = random.choice(valid_moves)
+        print(f'Player {self.player_id} choose move {dict_move[move]}.')
+        time.sleep(0.5)
         self.make_move(game,hand,move)
