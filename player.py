@@ -80,11 +80,11 @@ class Hand:
 
 class Player:
     player_number = 0
-    def __init__(self,pot):
+    def __init__(self,pot,mini_pause):
         self.pot = pot
         self.hands = [] #a player can have multiple hand when he split game
         #self.status = None #playing, done, won, blown_up
-
+        self.mini_pause = mini_pause
     def draw_first_cards(self,game):
         self.hands.append(Hand(game))
 
@@ -133,22 +133,39 @@ class Player:
             else:
                 self.get_move(game,hand)
         elif move == 'SP':
-            hands = hand.split(game)
+            print(f'The hand is split.')
+            hand1,hand2 = hand.split(game)
+
+            hand1_str = hand1.get_printable_card()
+            hand2_str = hand2.get_printable_card()
+            print(f'First hand is [{hand1_str[0]}] and [{hand1_str[1]}]')
+            print(f'With a score of {hand1.score}')
             self.hands.remove(hand)
-            self.hands.append(hands)
-            self.get_move(game,hands[0])
-            self.get_move(game,hands[1])
+            self.hands.append(hand1)
+            self.hands.append(hand2)
+
+            self.get_move(game,hand1)
+            print(f'Second hand is [{hand2_str[0]}] and [{hand2_str[1]}]')
+            print(f'With a score of {hand2.score}')
+            self.get_move(game,hand2)
         elif move == 'D':
             #end of hand turn
             hand.status = 'done'
 
+    @staticmethod
+    def remove_loser(players):
+        for player in players:
+            if player.pot<=0:
+                print(f'Player {player.player_id} is eliminated')
+                players.remove(player)
+        return players
 
 
 
 class Dealer(Player):
 
-    def __init__(self):
-        super().__init__(math.inf)
+    def __init__(self,mini_pause):
+        super().__init__(math.inf,mini_pause)
 
     def draw_first_cards(self,game):
         super().draw_first_cards(game)
@@ -161,7 +178,7 @@ class Dealer(Player):
         hand = self.hands[0]
         hand.hand_score()
         while hand.score<17:
-            time.sleep(0.5)
+            time.sleep(self.mini_pause)
             hand.add_card(game)
 
         self.update_final_status()
@@ -181,8 +198,8 @@ class Dealer(Player):
 
 class HumanGambler(Player):
 
-    def __init__(self,pot):
-        super().__init__(pot)
+    def __init__(self,pot,mini_pause):
+        super().__init__(pot,mini_pause)
         Player.player_number += 1
         self.player_id = Player.player_number
 
@@ -223,13 +240,14 @@ class HumanGambler(Player):
 
 class RandomComputerGambler(Player):
 
-    def __init__(self,pot):
-        super().__init__(pot)
+    def __init__(self,pot,mini_pause):
+        super().__init__(pot,mini_pause)
         Player.player_number += 1
         self.player_id = Player.player_number
 
     def choose_bet_size(self):
-        self.bet = random.randint(1,self.pot)
+        print(self.pot)
+        self.bet = self.pot if self.pot<2 else random.randint(1,int(self.pot))
         self.pot -= self.bet
         print(f'Random Computer player bet {self.bet}$')
 
@@ -247,5 +265,5 @@ class RandomComputerGambler(Player):
         dict_move = {'S':'Stop','D':'Draw','SP':'Split'}
         move = random.choice(valid_moves)
         print(f'Player {self.player_id} choose move {dict_move[move]}.')
-        time.sleep(0.5)
+        time.sleep(self.mini_pause)
         self.make_move(game,hand,move)
