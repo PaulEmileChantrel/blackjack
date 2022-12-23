@@ -2,13 +2,15 @@ import math
 import random
 import time
 class Hand:
-    def __init__(self,game,card=None):
+    def __init__(self,game,update,card=None):
+        print(update)
         if card :
             self.hand = [card,game.draw_card()]
         else:
-            self.hand = [game.draw_card(),game.draw_card()]
+            self.hand = [game.draw_card(),game.draw_card(update)]
         self.status = 'playing'
         self.score = self.hand_score()
+
 
     def toss_hand(self,game):
         game.toss_card(self.hand)
@@ -89,8 +91,8 @@ class Player:
         self.mini_pause = mini_pause
         self.insurance_bet = 0
 
-    def draw_first_cards(self,game):
-        self.hands.append(Hand(game))
+    def draw_first_cards(self,game,update=True):
+        self.hands.append(Hand(game,update))
 
 
 
@@ -119,11 +121,11 @@ class Player:
         self.pot += self.bet
         print(f'Player {self.player_id} won/lost nothing')
 
-    def choose_bet_size(self):
+    def choose_bet_size(self,card_count):
         if self.random_bet_size:
             self.bet = self.pot if self.pot<2 else random.randint(1,int(self.pot))
         else:
-            self.bet = self.pot if self.pot<2 else int(0.2*self.pot)
+            self.bet = self.pot if self.pot<5 else int(0.2*self.pot)
         self.pot -= self.bet
         print(f'Smart Computer Player {self.player_id} bet {self.bet}$')
 
@@ -207,7 +209,7 @@ class Dealer(Player):
 
 
     def draw_first_cards(self,game):
-        super().draw_first_cards(game)
+        super().draw_first_cards(game,update = False)
         hand = self.hands[0].get_printable_card()
         print('')
         print(f'Dealer draw [{hand[0]}] and [?]')
@@ -219,6 +221,7 @@ class Dealer(Player):
     def make_move(self,game):
         hand = self.hands[0]
         hand.hand_score()
+        game.update_card_count(hand.hand[1][0])
         while hand.score<17:
             time.sleep(self.mini_pause)
             hand.add_card(game)
@@ -245,7 +248,7 @@ class HumanGambler(Player):
         Player.player_number += 1
         self.player_id = Player.player_number
 
-    def choose_bet_size(self):
+    def choose_bet_size(self,card_count):
         self.bet = input(f'Player {self.player_id} must choose his bet size (1-{self.pot}):')
 
         try:
@@ -466,3 +469,42 @@ class SmartComputerGambler(Player):
 
     def take_insurance(self):
         print(f'Player {self.player_id} didn\'t choose the insurance.')
+
+
+class GeniusComputerPlayer(SmartComputerGambler):
+
+    def __init__(self,pot,mini_pause,random_bet_size = True):
+        super().__init__(pot,mini_pause,random_bet_size)
+
+    def choose_bet_size(self,card_count):
+        ## strategy 1
+        # bet = 15 + card_count
+        # bet = int(self.pot *bet/100) if bet >0 else int(self.pot/100)
+        # self.bet = bet if bet>1 else 1 if self.pot>1 else self.pot
+
+
+        ## strategy 2
+        # if card_count<22:
+        #     self.bet = 1
+        # else:
+        #     self.bet = int(0.3*self.pot)
+        #     self.bet = self.bet if self.bet>1 else 1
+        #
+        ## strategy 3
+        base_bet = int(self.pot*0.05)
+        bias = 15
+
+        if card_count<=1:
+            self.bet = int(base_bet/5)
+        elif card_count<=3+bias:
+            self.bet = 2*base_bet
+        elif card_count <=5+bias:
+            self.bet = 3*base_bet
+        elif card_count <=7+bias:
+            self.bet = 4*base_bet
+        else:
+            self.bet = 5*base_bet
+
+        self.bet = self.bet if 1<=self.bet<=self.pot else self.pot
+
+        self.pot -= self.bet
