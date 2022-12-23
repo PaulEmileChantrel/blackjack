@@ -188,18 +188,25 @@ def turn(game,dealer,players,mini_pause):
     players = Player.remove_loser(players)
 
     # End of turn
-    game.print_deck()
+    #game.print_deck()
     # if game.hand_was_splitted:
     #     raise ValueError
     return
 
+def main():
 
-if __name__=='__main__':
-
+    #ms of pause between moves
     mini_pause = 0
+
+
     game = CardGame()
     game.print_deck()
 
     dealer = Dealer(mini_pause)
     player = [SmartComputerGambler(10000,mini_pause),SmartComputerGambler(10000,mini_pause),RandomComputerGambler(10000,mini_pause)]
     table_play(game,dealer,player,mini_pause)
+
+
+
+if __name__=='__main__':
+    main()
