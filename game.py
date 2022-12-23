@@ -1,4 +1,4 @@
-from player import Player, Dealer, HumanGambler, RandomComputerGambler
+from player import Player, Dealer, HumanGambler, RandomComputerGambler,SmartComputerGambler
 import random
 import time
 class CardGame:
@@ -128,7 +128,7 @@ def turn(game,dealer,players,mini_pause):
         dealer.hands = []
         return
 
-
+    dealer_card = dealer.hands[0].hand[0]
     # Here, the dealer does not have a blackjack
     # And the remaining player neither
     for player in players:
@@ -136,7 +136,7 @@ def turn(game,dealer,players,mini_pause):
         if player.hands:
             print(f'Player {player.player_id} turn:')
             time.sleep(mini_pause)
-            player.get_moves(game)
+            player.get_moves(game,dealer_card)
 
     # The dealer turn
     print('')
@@ -201,5 +201,5 @@ if __name__=='__main__':
     game.print_deck()
 
     dealer = Dealer(mini_pause)
-    player = [HumanGambler(10000,mini_pause),RandomComputerGambler(10000,mini_pause),RandomComputerGambler(10000,mini_pause)]
+    player = [SmartComputerGambler(10000,mini_pause),SmartComputerGambler(10000,mini_pause),RandomComputerGambler(10000,mini_pause)]
     table_play(game,dealer,player,mini_pause)

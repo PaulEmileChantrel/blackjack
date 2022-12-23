@@ -1,5 +1,6 @@
 # blackjack
 ###Todo:
+
 ~~-> bug with the number of cards to fix (probably because of the split)~~
 
 ~~-> check for blackjack after split~~

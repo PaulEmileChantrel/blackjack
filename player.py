@@ -94,13 +94,13 @@ class Player:
 
 
 
-    def get_moves(self,game):
+    def get_moves(self,game,dealer_card = None):
         # the current score is lower than 21
         moves = []
         hands = self.hands[:] # in case of a split, we dont want to modify the loop
         for hand in hands:
             print(f'Your score is {hand.score}.')
-            move = self.get_move(game,hand)
+            move = self.get_move(game,hand,dealer_card)
 
 
     def won_hand(self):
@@ -119,9 +119,17 @@ class Player:
         self.pot += self.bet
         print(f'Player {self.player_id} won/lost nothing')
 
+    def choose_bet_size(self):
+        if self.random_bet_size:
+            self.bet = self.pot if self.pot<2 else random.randint(1,int(self.pot))
+        else:
+            self.bet = self.pot if self.pot<2 else int(0.2*self.pot)
+        self.pot -= self.bet
+        print(f'Smart Computer Player {self.player_id} bet {self.bet}$')
 
 
-    def make_move(self,game,hand,move):
+
+    def make_move(self,game,hand,move,dealer_card=None):
 
         if move == 'D':
             #draw a card
@@ -135,7 +143,7 @@ class Player:
                 #end of hand turn
                 pass
             else:
-                self.get_move(game,hand)
+                self.get_move(game,hand,dealer_card)
         elif move == 'DD':
             self.pot -= self.bet
             self.bet *= 2
@@ -165,7 +173,7 @@ class Player:
                 hand1.toss_hand(game)
             else:
                 self.hands.append(hand1)
-                self.get_move(game,hand1)
+                self.get_move(game,hand1,dealer_card)
 
             print(f'Second hand is [{hand2_str[0]}] and [{hand2_str[1]}]')
             print(f'With a score of {hand2.score}')
@@ -175,10 +183,10 @@ class Player:
                 hand2.toss_hand(game)
             else:
                 self.hands.append(hand2)
-                self.get_move(game,hand2)
+                self.get_move(game,hand2,dealer_card)
 
 
-        elif move == 'D':
+        elif move == 'S':
             #end of hand turn
             hand.status = 'done'
 
@@ -256,7 +264,7 @@ class HumanGambler(Player):
         print(f'Player {self.player_id} draw [{hand[0]}] and [{hand[1]}]')
         print(f'The hand score is {self.hands[0].score}')
 
-    def get_move(self,game,hand):
+    def get_move(self,game,hand,dealer_hand = None):
         if hand.score<21:
             if hand.can_split() and self.pot>=self.bet:
                 if hand.get_card_number()==2 and self.pot>=self.bet:
@@ -303,16 +311,12 @@ class HumanGambler(Player):
 
 class RandomComputerGambler(Player):
 
-    def __init__(self,pot,mini_pause):
+    def __init__(self,pot,mini_pause,random_bet_size=True):
         super().__init__(pot,mini_pause)
         Player.player_number += 1
         self.player_id = Player.player_number
+        self.random_bet_size = random_bet_size
 
-    def choose_bet_size(self):
-
-        self.bet = self.pot if self.pot<2 else random.randint(1,int(self.pot))
-        self.pot -= self.bet
-        print(f'Random Computer Player {self.player_id} bet {self.bet}$')
 
     def draw_first_cards(self,game):
         super().draw_first_cards(game)
@@ -320,7 +324,7 @@ class RandomComputerGambler(Player):
         print(f'Player {self.player_id} draw [{hand[0]}] and [{hand[1]}]')
         print(f'The hand score is {self.hands[0].score}')
 
-    def get_move(self,game,hand):
+    def get_move(self,game,hand,dealer_card = None):
         if hand.score<21:
             valid_moves = ['S','D']
             if hand.can_split() and self.pot>=self.bet:
@@ -345,3 +349,120 @@ class RandomComputerGambler(Player):
                 print(f'Player {self.player_id} didn\'t choose the insurance.')
         else:
             print(f'Player {self.player_id} don\'t have enough to get insured.')
+
+class SmartComputerGambler(Player):
+    soft_table = [['D','D','D','DD','DD','D','D','D','D','D'],#As,2
+                    ['D','D','D','DD','DD','D','D','D','D','D'],#As,3
+                    ['D','D','DD','DD','DD','D','D','D','D','D'],#As,4
+                    ['D','D','DD','DD','DD','D','D','D','D','D'],#As,5
+                    ['D','DD','DD','DD','DD','D','D','D','D','D'],#As,6
+                    ['DD','DD','DD','DD','DD','S','S','D','D','D'],#As,7
+                    ['S','S','S','S','DD','S','S','S','S','S'],#As,8
+                    ['S','S','S','S','S','S','S','S','S','S']#As,9
+    ]
+
+    hard_table = [['D','D','D','D','D','D','D','D','D','D'],#5-8
+                    ['D','DD','DD','DD','DD','D','D','D','D','D'],#9
+                    ['DD','DD','DD','DD','DD','DD','DD','DD','D','D'],#10
+                    ['DD','DD','DD','DD','DD','DD','DD','DD','DD','DD'],#11
+                    ['D','D','S','S','S','D','D','D','D','D'],#12
+                    ['S','S','S','S','S','D','D','D','D','D'],#13-16
+                    ['S','S','S','S','S','S','S','S','S','S']#17-21
+    ]
+
+    split_table = [[True,True,True,True,True,True,True,True,True,True],#as
+                    [True,True,True,True,True,True,False,False,False,False],#2
+                    [True,True,True,True,True,True,False,False,False,False],#3
+                    [False,False,False,True,True,False,False,False,False,False],#4
+                    [False,False,False,False,False,False,False,False,False,False],#5
+                    [True,True,True,True,True,False,False,False,False,False],#6
+                    [True,True,True,True,True,True,False,False,False,False],#7
+                    [True,True,True,True,True,True,True,True,True,True],#8
+                    [True,True,True,True,True,False,True,True,False,False],#9
+                    [False,False,False,False,False,False,False,False,False,False],#10
+    ]
+    def __init__(self,pot,mini_pause,random_bet_size = True):
+        super().__init__(pot,mini_pause)
+        Player.player_number += 1
+        self.player_id = Player.player_number
+        self.random_bet_size = random_bet_size
+
+
+    def draw_first_cards(self,game):
+        super().draw_first_cards(game)
+        hand = self.hands[0].get_printable_card()
+        print(f'Player {self.player_id} draw [{hand[0]}] and [{hand[1]}]')
+        print(f'The hand score is {self.hands[0].score}')
+
+    def get_move(self,game,hand,dealer_card):
+        if hand.score<21:
+            dict_move = {'S':'Stop','D':'Draw','SP':'Split','DD':'Double'}
+            move = self.get_smart_move(hand,dealer_card)
+            print(f'Player {self.player_id} choose move {dict_move[move]}.')
+            time.sleep(self.mini_pause)
+            self.make_move(game,hand,move,dealer_card)
+
+    def get_smart_move(self,hand,dealer_card):
+        player_cards = hand.hand
+        num_of_cards = len(player_cards)
+        has_as = player_cards[0][0]==1 or player_cards[1][0]==1
+        if SmartComputerGambler.should_smart_split(player_cards,dealer_card) and self.pot >=self.bet:
+            return 'SP'
+        elif num_of_cards == 2 and has_as:
+            #use soft total table
+            other_card = player_cards[0][0] if player_cards[1][0]==1 else player_cards[1][0]
+            col_value = SmartComputerGambler.map_col(dealer_card)
+            row_value = SmartComputerGambler.map_soft_row(other_card)
+            return SmartComputerGambler.soft_table[row_value][col_value]
+        else:
+            #use hard total table
+
+            total_score = hand.hand_score()
+            col_value = SmartComputerGambler.map_col(dealer_card)
+            row_value = SmartComputerGambler.map_hard_row(total_score)
+            move = SmartComputerGambler.hard_table[row_value][col_value]
+            if num_of_cards != 2 and move == 'DD' and self.pot <self.bet:
+                move = 'D'
+            return move
+
+    @classmethod
+    def should_smart_split(cls,player_cards,dealer_card):
+        if player_cards[0][0] == player_cards[0][1]:
+            col_value = cls.map_col(dealer_card)
+            row_value = cls.map_split_row(player_cards[0][0])
+            return cls.split_table[row_value][col_value]
+        else:
+            return False
+    @classmethod
+    def map_col(cls,dealer_card):
+        card_value = dealer_card[0]
+        if card_value ==1:
+            return 9
+        elif card_value >=10:
+            return 8
+        else:
+            return card_value-2
+    @classmethod
+    def map_soft_row(cls,card_value):
+        print(card_value)
+        if card_value>=10:
+            print('Should not run here')
+            raise ValueError
+        return card_value-2
+    @classmethod
+    def map_hard_row(cls,card_value):
+        if 17<=card_value<=21:
+            return 6
+        elif 13<=card_value<=16:
+            return 5
+        elif card_value<=8:
+            return 0
+        else:
+            return card_value - 8
+    @classmethod
+    def map_split_row(cls,card_value):
+        return card_value-1
+
+
+    def take_insurance(self):
+        print(f'Player {self.player_id} didn\'t choose the insurance.')
