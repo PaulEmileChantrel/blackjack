@@ -1,7 +1,7 @@
 # blackjack
 
--> bug with the number of cards to fix (probably because of the split)
--> check for blackjack after split
+~~-> bug with the number of cards to fix (probably because of the split)~~
+~~-> check for blackjack after split~~
 
 
 -> add insurance

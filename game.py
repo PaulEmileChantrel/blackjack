@@ -7,6 +7,8 @@ class CardGame:
         self.shuffle_deck()
         self.card_out = [] #card tossed out of the deck
         self.used_deck = 0
+
+        self.hand_was_splitted = False #for debugging
     def create_cards(self):
         # [1-13,'H'-'S'-'D'-'C'] ex. [2,'D']
         cards = []
@@ -129,8 +131,9 @@ def turn(game,dealer,players,mini_pause):
         for player in players:
             for hand in player.hands:
                 player.won_hand()
-                player.hands.remove(hand)
                 hand.toss_hand(game)
+            player.hands = []
+            player.bet = 0
 
 
     else:
@@ -147,8 +150,8 @@ def turn(game,dealer,players,mini_pause):
                     player.lost_hand()
                 else:
                     player.equal_hand()
-                player.hands.remove(hand)
                 hand.toss_hand(game)
+            player.hands = []
             player.bet = 0
 
     #Print player pot
@@ -164,6 +167,8 @@ def turn(game,dealer,players,mini_pause):
 
     # End of turn
     game.print_deck()
+    # if game.hand_was_splitted:
+    #     raise ValueError
     return
 
 
