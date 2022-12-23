@@ -1,14 +1,14 @@
 # blackjack
+###Todo:
+~~-> bug with the number of cards to fix (probably because of the split)~~
 
-~~ -> bug with the number of cards to fix (probably because of the split)~~
+~~-> check for blackjack after split~~
 
-~~ -> check for blackjack after split~~
+~~->check for dealer cards after he make a blackjack~~
 
-~~ check for dealer cards after he make a blackjack~~
+~~-> add insurance~~
 
-~~ -> add insurance
-
-~~ -> add double
+~~-> add double~~
 
 -> add Smart computer player using a decision table with
   input(his cards, dealer card)
