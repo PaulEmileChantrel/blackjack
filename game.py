@@ -81,8 +81,28 @@ def turn(game,dealer,players,mini_pause):
     for player in players:
         player.draw_first_cards(game)
 
+
+    if dealer.players_need_insurance:
+        for player in players:
+            player.take_insurance()
+
     # Check for dealer Blackjack
     dealer_blackjack = dealer.hands[0].blackjack()
+
+    if dealer.players_need_insurance:
+        if dealer_blackjack:
+            print('Paying insurance')
+            for player in players:
+                #if the player is not insured-> insurance_bet = 0
+                player.pot += 3*player.insurance_bet #2:1 payout
+
+        else :
+            print('The Dealer doen\'t have a Blackjack, the insurance is lost')
+            for player in players:
+                player.insurance_bet = 0
+
+
+
 
     # Check for Blackjack
     for player in players:
@@ -104,6 +124,8 @@ def turn(game,dealer,players,mini_pause):
                 player.hands.remove(player.hands[0])
         #The turn is over
         players = Player.remove_loser(players)
+        dealer.hands[0].toss_hand(game)
+        dealer.hands = []
         return
 
 
@@ -111,17 +133,17 @@ def turn(game,dealer,players,mini_pause):
     # And the remaining player neither
     for player in players:
         print('')
-        print(f'Player {player.player_id} turn:')
-
-        time.sleep(mini_pause)
-        player.get_moves(game)
+        if player.hands:
+            print(f'Player {player.player_id} turn:')
+            time.sleep(mini_pause)
+            player.get_moves(game)
 
     # The dealer turn
     print('')
     print('The Dealer is playing:')
     time.sleep(mini_pause)
     dealer_cards = dealer.hands[0].get_printable_card()
-    print(f'The dealer cards are [{dealer_cards[0]}] and [{dealer_cards[1]}]')
+    print(f'The Dealer cards are [{dealer_cards[0]}] and [{dealer_cards[1]}]')
     print(f'The Dealer score is {dealer.hands[0].hand_score()}')
     dealer.make_move(game)
     print('')
@@ -179,5 +201,5 @@ if __name__=='__main__':
     game.print_deck()
 
     dealer = Dealer(mini_pause)
-    player = [RandomComputerGambler(10000,mini_pause),RandomComputerGambler(10000,mini_pause),RandomComputerGambler(10000,mini_pause)]
+    player = [HumanGambler(10000,mini_pause),RandomComputerGambler(10000,mini_pause),RandomComputerGambler(10000,mini_pause)]
     table_play(game,dealer,player,mini_pause)

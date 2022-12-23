@@ -27,8 +27,7 @@ class Hand:
     def get_printable_card(self):
         card_str = [self.card_value(card[0])+card[1] for card in self.hand]
         return card_str
-    def __str__(self):
-        return self.get_printable_card()
+
     def print_hand(self):
         card_str = self.get_printable_card()
         card_str = ', '.join(card_str)
@@ -86,6 +85,8 @@ class Player:
         self.hands = [] #a player can have multiple hand when he split game
         #self.status = None #playing, done, won, blown_up
         self.mini_pause = mini_pause
+        self.insurance_bet = 0
+
     def draw_first_cards(self,game):
         self.hands.append(Hand(game))
 
@@ -181,11 +182,15 @@ class Dealer(Player):
     def __init__(self,mini_pause):
         super().__init__(math.inf,mini_pause)
 
+
     def draw_first_cards(self,game):
         super().draw_first_cards(game)
         hand = self.hands[0].get_printable_card()
         print('')
         print(f'Dealer draw [{hand[0]}] and [?]')
+        self.players_need_insurance = False
+        if self.hands[0].hand[0][0]== 1:
+            self.players_need_insurance = True
 
 
     def make_move(self,game):
@@ -253,6 +258,20 @@ class HumanGambler(Player):
                     move = input(f'Do you want to draw (D) or stop (S): ')
             self.make_move(game,hand,move)
 
+    def take_insurance(self):
+        if self.pot >=self.bet *0.5:
+            insurance = input(f'The Dealer might have a Blackjack, does Player {self.player_id} want to take an insurance (Y or N)?')
+            while insurance != 'N' and insurance != 'Y':
+                print('Wrong input, you must type Y or N')
+                insurance = input(f'The Dealer miaght have a Blackjack, does Player {self.player_id} want to take an insurance (Y or N)?')
+            if insurance == 'Y':
+                self.pot -= self.bet *0.5
+                self.insurance_bet = self.bet *0.5
+        else:
+            print(f'Player {self.player_id} don\'t have enough to get insured.')
+
+
+
 class RandomComputerGambler(Player):
 
     def __init__(self,pot,mini_pause):
@@ -261,10 +280,10 @@ class RandomComputerGambler(Player):
         self.player_id = Player.player_number
 
     def choose_bet_size(self):
-        print(self.pot)
+
         self.bet = self.pot if self.pot<2 else random.randint(1,int(self.pot))
         self.pot -= self.bet
-        print(f'Random Computer player bet {self.bet}$')
+        print(f'Random Computer Player {self.player_id} bet {self.bet}$')
 
     def draw_first_cards(self,game):
         super().draw_first_cards(game)
@@ -283,3 +302,16 @@ class RandomComputerGambler(Player):
             print(f'Player {self.player_id} choose move {dict_move[move]}.')
             time.sleep(self.mini_pause)
             self.make_move(game,hand,move)
+
+    def take_insurance(self):
+        if self.pot >=self.bet *0.5:
+            self.insured = random.choice([True, False])
+            if self.insured == True:
+                print(f'Player {self.player_id} choose the insurance.')
+
+                self.pot -= self.bet *0.5
+                self.insurance_bet = self.bet *0.5
+            else:
+                print(f'Player {self.player_id} didn\'t choose the insurance.')
+        else:
+            print(f'Player {self.player_id} don\'t have enough to get insured.')
