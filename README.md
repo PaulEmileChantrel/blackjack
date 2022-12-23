@@ -8,6 +8,8 @@
 
 ~~ -> add insurance
 
+~~ -> add double
+
 -> add Smart computer player using a decision table with
   input(his cards, dealer card)
 

@@ -70,6 +70,8 @@ class Hand:
             self.status = 'done'
         else:
             self.status = 'playing'
+    def get_card_number(self):
+        return len(self.hand)
 
     def can_split(self):
         # return True if the player can split his card
@@ -134,6 +136,19 @@ class Player:
                 pass
             else:
                 self.get_move(game,hand)
+        elif move == 'DD':
+            self.pot -= self.bet
+            self.bet *= 2
+            hand.add_card(game)
+
+            if hand.score>21:
+                self.lost_hand()
+                self.hands.remove(hand)
+                hand.toss_hand(game)
+            else:
+                #end turn
+                pass
+
         elif move == 'SP':
             print(f'The hand is split.')
             self.pot -= self.bet
@@ -244,12 +259,26 @@ class HumanGambler(Player):
     def get_move(self,game,hand):
         if hand.score<21:
             if hand.can_split() and self.pot>=self.bet:
-                valid_moves = ['S','D','SP']
-                move = input(f'Do you want to draw (D), stop (S) or split (SP): ')
-                while not move in valid_moves:
-                    print('This move is incorrect. You need to type : D,S or SP.')
-                    move = input(f'Do you want to draw (D), stop (S) or split (SP): ')
+                if hand.get_card_number()==2 and self.pot>=self.bet:
+                    valid_moves = ['S','D','SP','DD']
+                    move = input(f'Do you want to draw (D), stop (S), Double (DD) or split (SP): ')
+                    while not move in valid_moves:
+                        print('This move is incorrect. You need to type : D, S, DD or SP.')
+                        move = input(f'Do you want to draw (D), stop (S), Double (DD) or split (SP): ')
 
+                else:
+                    valid_moves = ['S','D','SP']
+                    move = input(f'Do you want to draw (D), stop (S) or split (SP): ')
+                    while not move in valid_moves:
+                        print('This move is incorrect. You need to type : D,S or SP.')
+                        move = input(f'Do you want to draw (D), stop (S) or split (SP): ')
+
+            elif hand.get_card_number()==2 and self.pot>=self.bet:
+                valid_moves = ['S','D','DD']
+                move = input(f'Do you want to draw (D), stop (S) or double (DD): ')
+                while not move in valid_moves:
+                    print('This move is incorrect. You need to type : D, S or DD.')
+                    move = input(f'Do you want to draw (D), stop (S) or double (DD): ')
             else:
                 valid_moves = ['S','D']
                 move = input(f'Do you want to draw (D) or stop (S): ')
@@ -293,11 +322,12 @@ class RandomComputerGambler(Player):
 
     def get_move(self,game,hand):
         if hand.score<21:
+            valid_moves = ['S','D']
             if hand.can_split() and self.pot>=self.bet:
-                valid_moves = ['S','D','SP']
-            else:
+                valid_moves.append('SP')
+            if hand.get_card_number()==2 and self.pot>=self.bet:
                 valid_moves = ['S','D']
-            dict_move = {'S':'Stop','D':'Draw','SP':'Split'}
+            dict_move = {'S':'Stop','D':'Draw','SP':'Split','DD':'Double'}
             move = random.choice(valid_moves)
             print(f'Player {self.player_id} choose move {dict_move[move]}.')
             time.sleep(self.mini_pause)
