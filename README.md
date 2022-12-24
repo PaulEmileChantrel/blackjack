@@ -8,6 +8,14 @@ Human player will need your input.
 Random computer player will play at random, Smart computer player uses decision tables to play and Genius computer table use decision tables and count cards.
 
 The Figures below show the average pot for the different computer player accros turn:
+
+
+![avg_pot2](https://user-images.githubusercontent.com/96018383/209431760-a8a78e79-9543-42e1-a7cf-ee86f79fdbe6.png)
+
+![avg_pot3](https://user-images.githubusercontent.com/96018383/209431768-7ea15e88-cf65-465b-b7c6-ae5e0a0a0966.png)
+
+
+
 ### Todo:
 
 ~~-> bug with the number of cards to fix (probably because of the split)~~
